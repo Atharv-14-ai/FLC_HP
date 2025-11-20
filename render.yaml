@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: flc-v9-demo
+    env: python
+    plan: free
+    buildCommand: |
+      pip install -r requirements.txt
+    startCommand: |
+      gunicorn --bind 0.0.0.0:$PORT app:app
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        value: "demo-secret-key-for-client-2024"
+      - key: DEMO_MODE
+        value: "true"

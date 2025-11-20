@@ -1,0 +1,9 @@
+Flask
+Flask-SQLAlchemy
+Flask-Bcrypt
+python-dotenv
+psycopg2-binary
+gunicorn
+SQLAlchemy
+Werkzeug
+Jinja2
