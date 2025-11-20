@@ -23,6 +23,7 @@ from sqlalchemy.exc import IntegrityError, OperationalError
 load_dotenv()
 
 # --- App config ---
+# --- App config ---
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
 IS_PRODUCTION = os.environ.get("RAILWAY_ENVIRONMENT") == "production" or os.environ.get("FLASK_ENV") == "production"
@@ -30,6 +31,9 @@ IS_PRODUCTION = os.environ.get("RAILWAY_ENVIRONMENT") == "production" or os.envi
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
     "DATABASE_URL", "postgresql://postgres:1234@localhost:5432/flc"
 ).replace("postgres://", "postgresql://", 1)
+
+# ✅ ADD THIS LINE - SECRET_KEY is required for sessions and CSRF
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
 
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_pre_ping": True,
@@ -2070,3 +2074,4 @@ if __name__ == "__main__":
         port=port, 
         debug=debug_mode
     )
+
