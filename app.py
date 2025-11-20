@@ -27,7 +27,10 @@ load_dotenv()
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
 IS_PRODUCTION = os.environ.get("RAILWAY_ENVIRONMENT") == "production" or os.environ.get("FLASK_ENV") == "production"
-
+database_url = os.environ.get('DATABASE_URL')
+if database_url:
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
     "DATABASE_URL", "postgresql://postgres:1234@localhost:5432/flc"
 ).replace("postgres://", "postgresql://", 1)
@@ -2063,28 +2066,13 @@ def validate_quantity(qty_str, field_name="Quantity"):
 # ==================== MAIN EXECUTION ====================
 # ==================== MAIN EXECUTION ====================
 if __name__ == "__main__":
-    # Force database initialization
+    # Initialize database
     with app.app_context():
-        try:
-            print("🔄 Initializing database...")
-            db.create_all()
-            print("✅ Database tables created")
-            
-            # Create admin user if doesn't exist
-            if not User.query.filter_by(username="admin").first():
-                hashed_password = bcrypt.generate_password_hash("admin123").decode('utf-8')
-                admin_user = User(username="admin", password=hashed_password, role="Supplier")
-                db.session.add(admin_user)
-                db.session.commit()
-                print("✅ Admin user created: admin/admin123")
-            else:
-                print("✅ Admin user already exists")
-                
-        except Exception as e:
-            print(f"❌ Database initialization failed: {str(e)}")
+        init_db()
     
-    # Railway configuration
-    port = int(os.environ.get("PORT", 5000))
+    # Render configuration
+    port = int(os.environ.get("PORT", 10000))
     debug_mode = os.environ.get("FLASK_ENV") != "production"
     
     app.run(host='0.0.0.0', port=port, debug=debug_mode)
+
