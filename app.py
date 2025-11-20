@@ -25,17 +25,16 @@ load_dotenv()
 # --- App config ---
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
-# ✅ SECURITY FIX: Use environment variables
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-    "DATABASE_URL",
-    "postgresql://postgres:1234@localhost:5432/flc"
-)
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", os.urandom(24).hex())
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    "DATABASE_URL", "postgresql://postgres:1234@localhost:5432/flc"
+).replace("postgres://", "postgresql://", 1)
+
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_pre_ping": True,
     "pool_recycle": 300,
-    "isolation_level": "READ COMMITTED"  # ✅ Set isolation level
+    "pool_size": 10,
+    "max_overflow": 20,
+    "isolation_level": "READ COMMITTED"
 }
 app.config['WTF_CSRF_ENABLED'] = True
 app.config['WTF_CSRF_TIME_LIMIT'] = None
@@ -2096,5 +2095,6 @@ if __name__ == "__main__":
         debug=debug_mode,
         threaded=True
     )
+
 
             
