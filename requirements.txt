@@ -6,4 +6,7 @@ psycopg2-binary
 gunicorn
 SQLAlchemy
 Werkzeug
+Flask-WTF
+WTForms
+blinker
 Jinja2
