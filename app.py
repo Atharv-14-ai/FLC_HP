@@ -2061,17 +2061,30 @@ def validate_quantity(qty_str, field_name="Quantity"):
 
 
 # ==================== MAIN EXECUTION ====================
+# ==================== MAIN EXECUTION ====================
 if __name__ == "__main__":
-    # Initialize database
-    init_db()
+    # Force database initialization
+    with app.app_context():
+        try:
+            print("🔄 Initializing database...")
+            db.create_all()
+            print("✅ Database tables created")
+            
+            # Create admin user if doesn't exist
+            if not User.query.filter_by(username="admin").first():
+                hashed_password = bcrypt.generate_password_hash("admin123").decode('utf-8')
+                admin_user = User(username="admin", password=hashed_password, role="Supplier")
+                db.session.add(admin_user)
+                db.session.commit()
+                print("✅ Admin user created: admin/admin123")
+            else:
+                print("✅ Admin user already exists")
+                
+        except Exception as e:
+            print(f"❌ Database initialization failed: {str(e)}")
     
     # Railway configuration
     port = int(os.environ.get("PORT", 5000))
     debug_mode = os.environ.get("FLASK_ENV") != "production"
     
-    app.run(
-        host='0.0.0.0', 
-        port=port, 
-        debug=debug_mode
-    )
-
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)
