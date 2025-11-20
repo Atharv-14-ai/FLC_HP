@@ -25,6 +25,8 @@ load_dotenv()
 # --- App config ---
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
+IS_PRODUCTION = os.environ.get("RAILWAY_ENVIRONMENT") == "production" or os.environ.get("FLASK_ENV") == "production"
+
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
     "DATABASE_URL", "postgresql://postgres:1234@localhost:5432/flc"
 ).replace("postgres://", "postgresql://", 1)
@@ -38,6 +40,8 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 }
 app.config['WTF_CSRF_ENABLED'] = True
 app.config['WTF_CSRF_TIME_LIMIT'] = None
+app.config["DEBUG"] = not IS_PRODUCTION
+app.config["TESTING"] = False
 
 # --- Logging (debug friendly) ---
 logging.basicConfig(
@@ -2031,16 +2035,6 @@ def init_supplier_inventory():
         app.logger.error(f"Error initializing supplier inventory: {str(e)}")
 
 
-# ==================== DATABASE EVENT HANDLERS ====================
-# @event.listens_for(db.engine, "connect")
-# def set_sqlite_pragma(dbapi_connection, connection_record):
-#     """Enable foreign key constraints for SQLite"""
-#     if 'sqlite' in str(dbapi_connection):
-#         cursor = dbapi_connection.cursor()
-#         cursor.execute("PRAGMA foreign_keys=ON")
-#         cursor.close()
-
-
 # ==================== UTILITY FUNCTIONS ====================
 def sanitize_input(text, max_length=500):
     """Basic input sanitization"""
@@ -2067,34 +2061,12 @@ if __name__ == "__main__":
     # Initialize database
     init_db()
     
-    # Check if we're in production
-    is_production = os.environ.get("FLASK_ENV") == "production"
-    debug_mode = not is_production
-    
-    # Set appropriate logging level
-    if is_production:
-        app.logger.setLevel(logging.WARNING)
-        logging.basicConfig(level=logging.WARNING)
-    else:
-        app.logger.setLevel(logging.DEBUG)
-        logging.basicConfig(level=logging.DEBUG)
-    
-    # Security headers for production
-    if is_production:
-        @app.after_request
-        def set_security_headers(response):
-            response.headers['X-Content-Type-Options'] = 'nosniff'
-            response.headers['X-Frame-Options'] = 'DENY'
-            response.headers['X-XSS-Protection'] = '1; mode=block'
-            response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
-            return response
+    # Railway configuration
+    port = int(os.environ.get("PORT", 5000))
+    debug_mode = os.environ.get("FLASK_ENV") != "production"
     
     app.run(
         host='0.0.0.0', 
-        port=int(os.environ.get('PORT', 5000)), 
-        debug=debug_mode,
-        threaded=True
+        port=port, 
+        debug=debug_mode
     )
-
-
-            
